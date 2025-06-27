@@ -13,9 +13,9 @@ function Signup() {
   const handleRegister = async (e) => {
     e.preventDefault();
     try {
-      const { data } = await axios.post(
-        "https://todo-website-qbgq.onrender.com
-/user/signup",
+     const { data } = await axios.post(
+  "https://todo-website-qbgq.onrender.com/user/signup",
+
         {
           username,
           email,

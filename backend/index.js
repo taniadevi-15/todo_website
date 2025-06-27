@@ -19,12 +19,13 @@ app.use(cookieParser());
 
 app.use(
   cors({
-    origin: "https://todo-website-1-gboi.onrender.com", // ✅ Frontend live URL
+    origin: process.env.FRONTEND_URL,
     credentials: true,
-    methods: "GET,POST,PUT,DELETE",
+    methods: ["GET", "POST", "PUT", "DELETE"],
     allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
+
 
 // Root test route
 app.get("/", (req, res) => {

@@ -11,14 +11,13 @@ function Login() {
   const handleRegister = async (e) => {
     e.preventDefault();
     try {
-      const { data } = await axios.post(
-        "https://todo-website-qbgq.onrender.com
-/user/login",
-        {
-          email,
-          password,
-        },
-        {
+     const { data } = await axios.post(
+  "https://todo-website-qbgq.onrender.com/user/login",
+  {
+    email,
+    password,
+  },
+       {
           withCredentials: true,
           headers: {
             "Content-Type": "application/json",

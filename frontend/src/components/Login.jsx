@@ -12,6 +12,7 @@ function Login() {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
+<<<<<<< HEAD
       const { data } = await axios.post(
         "http://localhost:4001/user/login",
         {
@@ -19,6 +20,15 @@ function Login() {
           password,
         },
         {
+=======
+     const { data } = await axios.post(
+  "https://todo-website-qbgq.onrender.com/user/login",
+  {
+    email,
+    password,
+  },
+       {
+>>>>>>> d95aee18fc77cc7198ecbc173a1c200eee604d44
           withCredentials: true,
           headers: {
             "Content-Type": "application/json",

@@ -7,17 +7,18 @@ import cookieParser from "cookie-parser";
 import todoRoute from "./routes/todo.route.js";
 import userRoute from "./routes/user.route.js";
 
-// Load environment variables
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 4002;
+const PORT = process.env.PORT || 4001;
 const DB_URI = process.env.MONGODB_URI;
 const FRONTEND_URL = process.env.FRONTEND_URL;
 
 // Middlewares
 app.use(express.json());
 app.use(cookieParser());
+
+// ✅ Use correct CORS settings for cross-origin + cookies
 app.use(
   cors({
     origin: FRONTEND_URL,
@@ -27,7 +28,7 @@ app.use(
   })
 );
 
-// Test route
+// Health check route
 app.get("/", (req, res) => {
   res.send("✅ Backend is live!");
 });
@@ -39,7 +40,7 @@ app.use("/user", userRoute);
 // Start server after DB connection
 const startServer = async () => {
   try {
-    await mongoose.connect(DB_URI); // ✅ Clean connection
+    await mongoose.connect(DB_URI);
     console.log("✅ Connected to MongoDB");
 
     app.listen(PORT, () => {
@@ -47,7 +48,7 @@ const startServer = async () => {
     });
   } catch (error) {
     console.error("❌ MongoDB connection failed:", error.message);
-    process.exit(1); // Exit process if DB fails
+    process.exit(1);
   }
 };
 

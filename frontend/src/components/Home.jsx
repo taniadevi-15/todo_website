@@ -20,7 +20,7 @@ function Home() {
     const fetchTodos = async () => {
       try {
         setLoading(true);
-        const res = await axios.get("http://localhost:4001/todo/fetch", {
+        const res = await axios.get("https://todo-websitee.onrender.com/todo/fetch", {
           withCredentials: true,
         });
         setTodos(res.data.todos);
@@ -59,7 +59,7 @@ function Home() {
 
     try {
       const res = await axios.post(
-        "http://localhost:4001/todo/create",
+        "https://todo-websitee.onrender.com/todo/create",
         {
           text: newTodo,
           dueDate,
@@ -91,7 +91,7 @@ function Home() {
     const todo = todos.find((t) => t._id === id);
     try {
       const res = await axios.put(
-        `http://localhost:4001/todo/update/${id}`,
+        `https://todo-websitee.onrender.com/todo/update/${id}`,
         { ...todo, completed: !todo.completed },
         { withCredentials: true }
       );
@@ -103,7 +103,7 @@ function Home() {
 
   const deleteTodo = async (id) => {
     try {
-      await axios.delete(`http://localhost:4001/todo/delete/${id}`, {
+      await axios.delete(`https://todo-websitee.onrender.com/todo/delete/${id}`, {
         withCredentials: true,
       });
       setTodos(todos.filter((t) => t._id !== id));
@@ -114,7 +114,7 @@ function Home() {
 
   const logout = async () => {
     try {
-      await axios.get("http://localhost:4001/user/logout", {
+      await axios.get("https://todo-websitee.onrender.com/user/logout", {
         withCredentials: true,
       });
       toast.success("Logged out successfully");

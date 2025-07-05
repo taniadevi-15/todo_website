@@ -1,4 +1,3 @@
-
 import mongoose from "mongoose";
 
 const todoSchema = new mongoose.Schema({
@@ -8,12 +7,33 @@ const todoSchema = new mongoose.Schema({
   },
   completed: {
     type: Boolean,
-    required: true,
+    default: false,
   },
   user: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "User", // referencing User model to connect to users collection in MongoDB.
+    ref: "User",
     required: true,
+  },
+  dueDate: {
+    type: Date,
+  },
+  tag: {
+    type: String,
+    default: "Personal",
+  },
+  priority: {
+    type: String,
+    enum: ["Low", "Medium", "High"],
+    default: "Low",
+  },
+  recurrence: {
+    type: String,
+    enum: ["None", "Daily", "Weekly", "Monthly"],
+    default: "None",
+  },
+  reminder: {
+    type: Boolean,
+    default: false,
   },
 });
 

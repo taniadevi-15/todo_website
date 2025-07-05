@@ -11,34 +11,34 @@ function Signup() {
   const navigateTo = useNavigate();
 
   const handleRegister = async (e) => {
-    e.preventDefault();
-    try {
-      const { data } = await axios.post(
-        "https://todo-website-qbgq.onrender.com/user/signup",
-        {
-          username,
-          email,
-          password,
+  e.preventDefault();
+  try {
+    const { data } = await axios.post(
+      "http://localhost:4001/user/signup",
+      {
+        username,
+        email,
+        password,
+      },
+      {
+        withCredentials: true,
+        headers: {
+          "Content-Type": "application/json",
         },
-        {
-          withCredentials: true,
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
-      console.log(data);
-      toast.success(data.message || "User registered successfully");
-      localStorage.setItem("jwt", data.token);
-      navigateTo("/login");
-      setUserName("");
-      setEmail("");
-      setPassword("");
-    } catch (error) {
-      console.log(error);
-      toast.error(error.response.data.errors || "User registration failed");
-    }
-  };
+      }
+    );
+    console.log(data);
+    toast.success(data.message || "User registered successfully");
+    localStorage.setItem("jwt", data.token);
+    navigateTo("/login");
+    setUserName("");
+    setEmail("");
+    setPassword("");
+  } catch (error) {
+    console.log("Signup error:", error);
+    toast.error(error?.response?.data?.errors || "User registration failed");
+  }
+};
 
   return (
     <div>

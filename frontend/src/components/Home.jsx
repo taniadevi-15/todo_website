@@ -1,173 +1,302 @@
-
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
+
 function Home() {
   const [todos, setTodos] = useState([]);
-  const [error, setError] = useState(null);
-  const [loading, setLoading] = useState(false);
   const [newTodo, setNewTodo] = useState("");
+  const [dueDate, setDueDate] = useState("");
+  const [tag, setTag] = useState("Personal");
+  const [priority, setPriority] = useState("Low");
+  const [recurrence, setRecurrence] = useState("None");
+  const [reminder, setReminder] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchtodos = async () => {
+    const fetchTodos = async () => {
       try {
         setLoading(true);
-        const response = await axios.get("https://todo-website-qbgq.onrender.com/todo/fetch", {
+        const res = await axios.get("http://localhost:4001/todo/fetch", {
           withCredentials: true,
-          headers: {
-            "Content-Type": "application/json",
-          },
         });
-        console.log(response.data.todos);
-        setTodos(response.data.todos);
-        setError(null);
-      } catch (error) {
-        setError("Failed to fetch todos");
+        setTodos(res.data.todos);
+      } catch {
+        setError("Failed to fetch tasks.");
       } finally {
         setLoading(false);
       }
     };
-    fetchtodos();
+
+    fetchTodos();
+
+    if (Notification.permission !== "granted") {
+      Notification.requestPermission();
+    }
   }, []);
 
-  const todoCreate = async () => {
-    if (!newTodo) return;
+  const scheduleReminder = (text, dateStr) => {
+    const due = new Date(dateStr);
+    const now = new Date();
+    const delay = due - now;
+
+    if (delay > 0) {
+      setTimeout(() => {
+        if (Notification.permission === "granted") {
+          new Notification("⏰ Reminder", {
+            body: `Your task "${text}" is due!`,
+          });
+        }
+      }, delay);
+    }
+  };
+
+  const createTodo = async () => {
+    if (!newTodo.trim()) return;
+
     try {
-      const response = await axios.post(
-        "https://todo-website-qbgq.onrender.com/todo/create",
+      const res = await axios.post(
+        "http://localhost:4001/todo/create",
         {
           text: newTodo,
+          dueDate,
+          tag,
+          priority,
+          recurrence,
+          reminder,
           completed: false,
         },
-        {
-          withCredentials: true,
-        }
+        { withCredentials: true }
       );
-      console.log(response.data.newTodo);
-      setTodos([...todos, response.data.newTodo]);
+
+      setTodos([...todos, res.data.newTodo]);
+      if (reminder && dueDate) scheduleReminder(newTodo, dueDate);
+
+      // Reset
       setNewTodo("");
-    } catch (error) {
-      setError("Failed to create todo");
+      setDueDate("");
+      setTag("Personal");
+      setPriority("Low");
+      setRecurrence("None");
+      setReminder(false);
+    } catch {
+      setError("Failed to create task.");
     }
   };
 
-  const todoStatus = async (id) => {
+  const toggleTodo = async (id) => {
     const todo = todos.find((t) => t._id === id);
     try {
-      const response = await axios.put(
-        `https://todo-website-qbgq.onrender.com/todo/update/${id}`,
-        {
-          ...todo,
-          completed: !todo.completed,
-        },
-        {
-          withCredentials: true,
-        }
+      const res = await axios.put(
+        `http://localhost:4001/todo/update/${id}`,
+        { ...todo, completed: !todo.completed },
+        { withCredentials: true }
       );
-      console.log(response.data.todo);
-      setTodos(todos.map((t) => (t._id === id ? response.data.todo : t)));
-    } catch (error) {
-      setError("Failed to find todo status");
+      setTodos(todos.map((t) => (t._id === id ? res.data.todo : t)));
+    } catch {
+      setError("Failed to update status.");
     }
   };
 
-  const todoDelete = async (id) => {
+  const deleteTodo = async (id) => {
     try {
-      await axios.delete(`https://todo-website-qbgq.onrender.com/todo/delete/${id}`, {
+      await axios.delete(`http://localhost:4001/todo/delete/${id}`, {
         withCredentials: true,
       });
       setTodos(todos.filter((t) => t._id !== id));
-    } catch (error) {
-      setError("Failed to Delete Todo");
+    } catch {
+      setError("Failed to delete task.");
     }
   };
 
-  const navigateTo = useNavigate();
   const logout = async () => {
     try {
-      await axios.get("https://todo-website-qbgq.onrender.com/user/logout", {
+      await axios.get("http://localhost:4001/user/logout", {
         withCredentials: true,
       });
-      toast.success("User logged out successfully");
-      navigateTo("/login");
+      toast.success("Logged out successfully");
       localStorage.removeItem("jwt");
-    } catch (error) {
-      toast.error("Error logging out");
+      navigate("/login");
+    } catch {
+      toast.error("Logout failed");
     }
   };
 
-  const remainingTodos = todos.filter((todo) => !todo.completed).length;
+  const remaining = todos.filter((t) => !t.completed).length;
+
+  const priorityOrder = { high: 1, medium: 2, low: 3 };
+  const sortedTodos = [...todos].sort((a, b) => {
+    const aP = a.priority?.toLowerCase() || "low";
+    const bP = b.priority?.toLowerCase() || "low";
+    return priorityOrder[aP] - priorityOrder[bP];
+  });
 
   return (
-    <div className=" my-10 bg-gray-100 max-w-lg lg:max-w-xl rounded-lg shadow-lg mx-8 sm:mx-auto p-6">
-      <h1 className="text-2xl font-semibold text-center">Todo App</h1>
-      <div className="flex mb-4">
-        <input
-          type="text"
-          placeholder="Add a new todo"
-          value={newTodo}
-          onChange={(e) => setNewTodo(e.target.value)}
-          onKeyPress={(e) => e.key === "Enter" && todoCreate()}
-          className="flex-grow p-2 border rounded-l-md focus:outline-none"
-        />
-        <button
-          onClick={todoCreate}
-          className="bg-blue-600 border rounded-r-md text-white px-4 py-2 hover:bg-blue-900 duration-300"
-        >
-          Add
-        </button>
-      </div>
-      {loading ? (
-        <div className="text-center justify-center">
-          <span className="textgray-500">Loading...</span>
+    <div className="my-10 max-w-2xl mx-auto p-8 bg-white dark:bg-zinc-900 rounded-xl shadow-xl transition-all">
+      <h1 className="text-3xl font-extrabold text-center text-gray-800 dark:text-white mb-6">
+        🎯 Todo App
+      </h1>
+
+      {/* Task Input */}
+      <div className="space-y-4 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <input
+            type="text"
+            placeholder="Add a new task"
+            value={newTodo}
+            onChange={(e) => setNewTodo(e.target.value)}
+            className="p-2 border rounded-md dark:bg-zinc-800 dark:text-white"
+          />
+          <input
+            type="date"
+            value={dueDate}
+            onChange={(e) => setDueDate(e.target.value)}
+            className="p-2 border rounded-md dark:bg-zinc-800 dark:text-white"
+          />
         </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+          <select
+            value={tag}
+            onChange={(e) => setTag(e.target.value)}
+            className="p-2 border rounded-md dark:bg-zinc-800 dark:text-white"
+          >
+            <option value="Personal">🟢 Personal</option>
+            <option value="Work">💼 Work</option>
+            <option value="Urgent">⚠️ Urgent</option>
+            <option value="Study">📘 Study</option>
+          </select>
+          <select
+            value={priority}
+            onChange={(e) => setPriority(e.target.value)}
+            className="p-2 border rounded-md dark:bg-zinc-800 dark:text-white"
+          >
+            <option value="Low">🟢 Low</option>
+            <option value="Medium">🟡 Medium</option>
+            <option value="High">🔴 High</option>
+          </select>
+          <select
+            value={recurrence}
+            onChange={(e) => setRecurrence(e.target.value)}
+            className="p-2 border rounded-md dark:bg-zinc-800 dark:text-white"
+          >
+            <option value="None">🚫 No Repeat</option>
+            <option value="Daily">🔁 Daily</option>
+            <option value="Weekly">🔂 Weekly</option>
+            <option value="Monthly">📅 Monthly</option>
+          </select>
+          <label className="flex items-center gap-2 text-sm dark:text-white">
+            <input
+              type="checkbox"
+              checked={reminder}
+              onChange={(e) => setReminder(e.target.checked)}
+            />
+            🔔 Reminder
+          </label>
+        </div>
+      </div>
+
+      <button
+        onClick={createTodo}
+        className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded mb-6 transition"
+      >
+        ➕ Add Task
+      </button>
+
+      {/* Task List */}
+      {loading ? (
+        <p className="text-center text-gray-500 dark:text-gray-400">Loading...</p>
       ) : error ? (
-        <div className="text-center text-red-600 font-semibold">{error}</div>
+        <p className="text-center text-red-600 dark:text-red-400">{error}</p>
       ) : (
-        <ul className="space-y-2">
-          {todos.map((todo, index) => (
-            <li
-              key={todo._id || index}
-              className="flex items-center justify-between p-3 bg-gray-100 rounded-md"
-            >
-              <div className="flex items-center">
-                <input
-                  type="checkbox"
-                  checked={todo.completed}
-                  onChange={() => todoStatus(todo._id)}
-                  className="mr-2"
-                />
-                <span
-                  className={`${
-                    todo.completed
-                      ? "line-through text-gray-800 font-semibold"
-                      : ""
-                  } `}
-                >
-                  {todo.text}
-                </span>
-              </div>
-              <button
-                onClick={() => todoDelete(todo._id)}
-                className="text-red-500 hover:text-red-800 duration-300"
+        <ul className="space-y-4 max-h-96 overflow-y-auto pr-2 scrollbar-thin">
+          {sortedTodos.map((todo) => {
+            const priority = todo.priority?.toLowerCase();
+            const priorityClass =
+              priority === "high"
+                ? "bg-red-100 text-red-800 dark:bg-red-200"
+                : priority === "medium"
+                ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-200"
+                : "bg-green-100 text-green-800 dark:bg-green-200";
+
+            const tagColors = {
+              Urgent: "bg-red-200 text-red-800",
+              Work: "bg-yellow-200 text-yellow-800",
+              Study: "bg-blue-200 text-blue-800",
+              Personal: "bg-green-200 text-green-800",
+            };
+
+            return (
+              <li
+                key={todo._id}
+                className="bg-gray-50 dark:bg-zinc-800 p-4 rounded-md flex justify-between items-start border dark:border-zinc-700 shadow-sm"
               >
-                Delete
-              </button>
-            </li>
-          ))}
+                <div className="flex-grow">
+                  <div className="flex items-center gap-2 mb-1">
+                    <input
+                      type="checkbox"
+                      checked={todo.completed}
+                      onChange={() => toggleTodo(todo._id)}
+                    />
+                    <span
+                      className={`text-lg ${
+                        todo.completed
+                          ? "line-through text-gray-400"
+                          : "text-gray-800 dark:text-white"
+                      }`}
+                    >
+                      {todo.text}
+                    </span>
+                    {todo.reminder && <span title="Reminder Active">🔔</span>}
+                  </div>
+                  <div className="flex flex-wrap gap-2 ml-6 text-sm">
+                    {todo.dueDate && (
+                      <span className="text-gray-600 dark:text-gray-300">
+                        📅 {new Date(todo.dueDate).toDateString()}
+                      </span>
+                    )}
+                    <span
+                      className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                        tagColors[todo.tag] || "bg-gray-200 text-gray-800"
+                      }`}
+                    >
+                      {todo.tag}
+                    </span>
+                    <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${priorityClass}`}>
+                      {todo.priority}
+                    </span>
+                    {todo.recurrence !== "None" && (
+                      <span className="bg-purple-200 text-purple-800 px-2 py-0.5 rounded-full text-xs font-medium">
+                        🔁 {todo.recurrence}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <button
+                  onClick={() => deleteTodo(todo._id)}
+                  className="text-red-500 font-medium hover:underline"
+                >
+                  Delete
+                </button>
+              </li>
+            );
+          })}
         </ul>
       )}
 
-      <p className="mt-4 text-center text-sm text-gray-700">
-        {remainingTodos} remaining todos
+      {/* Footer */}
+      <p className="mt-4 text-center dark:text-gray-300">
+        {remaining === 1 ? "1 task remaining" : `${remaining} tasks remaining`}
       </p>
+
       <button
-        onClick={() => logout()}
-        className="mt-6 px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-800 duration-500 mx-auto block"
+        onClick={logout}
+        className="mt-6 block mx-auto px-6 py-2 bg-red-600 hover:bg-red-700 text-white font-semibold rounded transition"
       >
-        Logout
+        🔓 Logout
       </button>
     </div>
   );

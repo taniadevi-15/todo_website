@@ -22,6 +22,7 @@ app.use(
     allowedHeaders: ["Content-Type", "Authorization"], // Add other headers you want to allow here.
   })
 );
+console.log(process.env.FRONTEND_URL)
 
 // Database connection code
 try {

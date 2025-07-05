@@ -10,19 +10,19 @@ export const authenticate = async (req, res, next) => {
     }
 
     // 2. Verify token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
 
-    // 3. Fetch user from DB
-    const user = await User.findById(decoded.userId).select("-password");
+    // ✅ Fix: Use decoded.id (not userId)
+    const user = await User.findById(decoded.id).select("-password");
     if (!user) {
       return res.status(401).json({ message: "Unauthorized: User not found" });
     }
 
-    // 4. Attach user to request
+    // 3. Attach user to request
     req.user = user;
     next();
   } catch (error) {
-    console.error("Auth error:", error.message);
+    // console.error("Auth error:", error.message);
     return res.status(401).json({ message: "Invalid or expired token" });
   }
 };

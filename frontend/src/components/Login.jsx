@@ -6,29 +6,15 @@ import { Link, useNavigate } from "react-router-dom";
 function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-
-  const navigate = useNavigate(); // Renamed for clarity
+  const navigate = useNavigate();
 
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-<<<<<<< HEAD
       const { data } = await axios.post(
         "http://localhost:4001/user/login",
+        { email, password },
         {
-          email,
-          password,
-        },
-        {
-=======
-     const { data } = await axios.post(
-  "https://todo-website-qbgq.onrender.com/user/login",
-  {
-    email,
-    password,
-  },
-       {
->>>>>>> d95aee18fc77cc7198ecbc173a1c200eee604d44
           withCredentials: true,
           headers: {
             "Content-Type": "application/json",
@@ -36,12 +22,11 @@ function Login() {
         }
       );
 
-      console.log("Login response:", data);
       toast.success(data.message || "User logged in successfully");
 
       if (data.token) {
         localStorage.setItem("jwt", data.token);
-        navigate("/"); // 👈 navigate after setting token
+        navigate("/");
       } else {
         toast.error("Token not received");
       }
@@ -49,23 +34,26 @@ function Login() {
       setEmail("");
       setPassword("");
     } catch (error) {
-      console.log(error);
-      toast.error(
-        error?.response?.data?.errors || "User login failed"
-      );
+      console.error(error);
+      toast.error(error?.response?.data?.errors || "User login failed");
     }
   };
 
   return (
-    <div className="flex h-screen items-center justify-center bg-gray-100">
-      <div className="w-full max-w-md p-8 bg-white rounded-lg shadow-lg">
-        <h2 className="text-2xl font-semibold mb-5 text-center">Login</h2>
+    <div className="flex h-screen items-center justify-center bg-gray-100 dark:bg-gray-900">
+      <div className="w-full max-w-md p-8 bg-white dark:bg-gray-800 rounded-lg shadow-lg">
+        <h2 className="text-2xl font-semibold mb-5 text-center text-gray-800 dark:text-white">
+          Login
+        </h2>
+
         <form onSubmit={handleLogin}>
           {/* Email */}
           <div className="mb-4">
-            <label className="block mb-2 font-semibold">Email</label>
+            <label className="block mb-2 font-semibold text-gray-700 dark:text-gray-300">
+              Email
+            </label>
             <input
-              className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -76,9 +64,11 @@ function Login() {
 
           {/* Password */}
           <div className="mb-4">
-            <label className="block mb-2 font-semibold">Password</label>
+            <label className="block mb-2 font-semibold text-gray-700 dark:text-gray-300">
+              Password
+            </label>
             <input
-              className="w-full p-3 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -89,13 +79,14 @@ function Login() {
 
           <button
             type="submit"
-            className="w-full bg-blue-600 text-white hover:bg-blue-900 duration-300 rounded-xl font-semibold p-3"
+            className="w-full bg-blue-600 text-white hover:bg-blue-800 dark:hover:bg-blue-700 transition duration-300 rounded-xl font-semibold p-3"
           >
             Login
           </button>
-          <p className="mt-4 text-center text-gray-600">
+
+          <p className="mt-4 text-center text-gray-600 dark:text-gray-300">
             New user?{" "}
-            <Link to="/signup" className="text-blue-600 hover:underline">
+            <Link to="/signup" className="text-blue-600 dark:text-blue-400 hover:underline">
               Signup
             </Link>
           </p>

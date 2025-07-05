@@ -7,50 +7,47 @@ import cookieParser from "cookie-parser";
 import todoRoute from "./routes/todo.route.js";
 import userRoute from "./routes/user.route.js";
 
+// Load environment variables
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 4001;
+const PORT = process.env.PORT || 4002;
 const DB_URI = process.env.MONGODB_URI;
+const FRONTEND_URL = process.env.FRONTEND_URL;
 
-// Middleware
+// Middlewares
 app.use(express.json());
 app.use(cookieParser());
-
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL,
+    origin: FRONTEND_URL,
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE"],
     allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
-console.log(process.env.FRONTEND_URL)
 
-
-// Root test route
+// Test route
 app.get("/", (req, res) => {
-  res.send("Backend is live ✅");
+  res.send("✅ Backend is live!");
 });
 
 // Routes
 app.use("/todo", todoRoute);
 app.use("/user", userRoute);
 
-// Start server only after DB connects
+// Start server after DB connection
 const startServer = async () => {
   try {
-    await mongoose.connect(DB_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
+    await mongoose.connect(DB_URI); // ✅ Clean connection
     console.log("✅ Connected to MongoDB");
 
     app.listen(PORT, () => {
-      console.log(`🚀 Server is running on port ${PORT}`);
+      console.log(`🚀 Server is running at http://localhost:${PORT}`);
     });
   } catch (error) {
-    console.error("❌ Failed to connect to MongoDB:", error);
+    console.error("❌ MongoDB connection failed:", error.message);
+    process.exit(1); // Exit process if DB fails
   }
 };
 

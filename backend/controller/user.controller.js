@@ -58,18 +58,37 @@ export const register = async (req, res) => {
 // ✅ Login Controller
 export const login = async (req, res) => {
   const { email, password } = req.body;
+  // console.log("➡️ Login request received:", email);
 
   try {
     if (!email || !password) {
+      // console.log("❌ Missing fields");
       return res.status(400).json({ message: "All fields are required" });
     }
 
     const user = await User.findOne({ email }).select("+password");
-    if (!user || !(await bcrypt.compare(password, user.password))) {
+    if (!user) {
+      // console.log("❌ User not found");
       return res.status(401).json({ errors: "Invalid email or password" });
     }
 
-    const token = await generateTokenAndSaveInCookies(user._id, res);
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      // console.log("❌ Password mismatch");
+      return res.status(401).json({ errors: "Invalid email or password" });
+    }
+
+    // console.log("✅ User authenticated");
+
+    let token;
+    try {
+      token = generateTokenAndSaveInCookies(user._id, res);
+      // console.log("✅ Token generated:", token);
+    } catch (tokenErr) {
+      // console.error("❌ Error generating token:", tokenErr);
+      return res.status(500).json({ message: "Token generation failed" });
+    }
+
     res.status(200).json({
       message: "Login successful",
       user: {
@@ -80,10 +99,11 @@ export const login = async (req, res) => {
       token,
     });
   } catch (error) {
-    console.error("Login error:", error);
+    // console.error("❌ Login error (outer catch):", error);
     res.status(500).json({ message: "Server error during login" });
   }
 };
+
 
 // ✅ Logout Controller
 export const logout = (req, res) => {

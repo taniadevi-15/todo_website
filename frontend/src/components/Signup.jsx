@@ -11,7 +11,6 @@ function Signup() {
   const navigateTo = useNavigate();
 
   const handleRegister = async (e) => {
-<<<<<<< HEAD
   e.preventDefault();
   try {
     const { data } = await axios.post(
@@ -25,21 +24,10 @@ function Signup() {
         withCredentials: true,
         headers: {
           "Content-Type": "application/json",
-=======
-    e.preventDefault();
-    try {
-     const { data } = await axios.post(
-  "https://todo-website-qbgq.onrender.com/user/signup",
-
-        {
-          username,
-          email,
-          password,
->>>>>>> d95aee18fc77cc7198ecbc173a1c200eee604d44
-        },
+        }
       }
     );
-    console.log(data);
+    // console.log(data);
     toast.success(data.message || "User registered successfully");
     localStorage.setItem("jwt", data.token);
     navigateTo("/login");

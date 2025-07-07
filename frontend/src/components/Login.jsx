@@ -6,12 +6,16 @@ import { Link, useNavigate } from "react-router-dom";
 function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  let [loading,setLoading]=useState(false)
+  let [error,setError]=useState("")
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
-    e.preventDefault();
+     e.preventDefault();
+  setLoading(true);
+  setError('');
     try {
-      const { data } = await axios.post(
+      const { result } = await axios.post(
         "https://todo-websitee.onrender.com/user/login",
         { email, password },
         {
@@ -22,23 +26,33 @@ function Login() {
         }
       );
 
-      toast.success(data.message || "User logged in successfully");
+      toast.success(result.message || "User logged in successfully");
 
-      if (data.token) {
-        localStorage.setItem("jwt", data.token);
-        navigate("/");
-      } else {
-        toast.error("Token not received");
-      }
+      
 
-      setEmail("");
-      setPassword("");
-    } catch (error) {
-      console.error(error);
-      toast.error(error?.response?.data?.errors || "User login failed");
+    if (result?.data) {
+      dispatch(setUserData(result.data));
+      dispatch(setSelectedUser(null));
+      navigate('/');
+      setEmail('');
+      setPassword('');
+    } else {
+      setError("Unexpected response from server");
     }
-  };
 
+  } catch (err) {
+    console.error("Login error:", err);
+    if (err.response?.data?.message) {
+      setError(err.response.data.message);
+    } else {
+      setError("Login failed. Please try again.");
+    }
+  } finally {
+    setLoading(false);
+  }
+};
+
+ 
   return (
     <div className="flex h-screen items-center justify-center bg-gray-100 dark:bg-gray-900">
       <div className="w-full max-w-md p-8 bg-white dark:bg-gray-800 rounded-lg shadow-lg">
@@ -84,12 +98,10 @@ function Login() {
             Login
           </button>
 
-          <p className="mt-4 text-center text-gray-600 dark:text-gray-300">
-            New user?{" "}
-            <Link to="/signup" className="text-blue-600 dark:text-blue-400 hover:underline">
-              Signup
-            </Link>
-          </p>
+         <p className='cursor-pointer mt-3' onClick={()=>{
+        navigate('/signup')
+      }} >Want to create a new Account ? <span className='text-[#20c7ff] ' disabled={loading}>{loading? "Loading...":"Sign up"}</span></p>
+     
         </form>
       </div>
     </div>

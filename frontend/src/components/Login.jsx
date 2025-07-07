@@ -1,107 +1,82 @@
-import axios from "axios";
 import React, { useState } from "react";
+import axios from "axios";
 import toast from "react-hot-toast";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 
 function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  let [loading,setLoading]=useState(false)
-  let [error,setError]=useState("")
-  const navigate = useNavigate();
+  const navigateTo = useNavigate();
 
   const handleLogin = async (e) => {
-     e.preventDefault();
-  setLoading(true);
-  setError('');
+    e.preventDefault();
     try {
-      const { result } = await axios.post(
+      const { data } = await axios.post(
         "https://todo-websitee.onrender.com/user/login",
         { email, password },
         {
           withCredentials: true,
           headers: {
             "Content-Type": "application/json",
-          },
+          }
         }
       );
 
-      toast.success(result.message || "User logged in successfully");
-
-      
-
-    if (result?.data) {
-      dispatch(setUserData(result.data));
-      dispatch(setSelectedUser(null));
-      navigate('/');
-      setEmail('');
-      setPassword('');
-    } else {
-      setError("Unexpected response from server");
+      toast.success(data.message || "Login successful");
+      localStorage.setItem("jwt", data.token);
+      navigateTo("/"); // navigate to home or dashboard
+      setEmail("");
+      setPassword("");
+    } catch (error) {
+      console.error("Login error:", error);
+      toast.error(error?.response?.data?.message || "Login failed. Please check your credentials.");
     }
+  };
 
-  } catch (err) {
-    console.error("Login error:", err);
-    if (err.response?.data?.message) {
-      setError(err.response.data.message);
-    } else {
-      setError("Login failed. Please try again.");
-    }
-  } finally {
-    setLoading(false);
-  }
-};
-
- 
   return (
-    <div className="flex h-screen items-center justify-center bg-gray-100 dark:bg-gray-900">
-      <div className="w-full max-w-md p-8 bg-white dark:bg-gray-800 rounded-lg shadow-lg">
-        <h2 className="text-2xl font-semibold mb-5 text-center text-gray-800 dark:text-white">
-          Login
-        </h2>
-
-        <form onSubmit={handleLogin}>
+    <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-zinc-950 transition-all">
+      <div className="w-full max-w-md p-8 bg-white dark:bg-zinc-900 text-black dark:text-white rounded-lg shadow-lg transition-all">
+        <h2 className="text-2xl font-bold mb-6 text-center">Login</h2>
+        <form onSubmit={handleLogin} className="space-y-4">
           {/* Email */}
-          <div className="mb-4">
-            <label className="block mb-2 font-semibold text-gray-700 dark:text-gray-300">
-              Email
-            </label>
+          <div>
+            <label className="block mb-1 font-semibold text-gray-800 dark:text-gray-200">Email</label>
             <input
-              className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="Type Email"
-              required
+              placeholder="Enter your email"
+              className="w-full p-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-zinc-800 text-black dark:text-white rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
           {/* Password */}
-          <div className="mb-4">
-            <label className="block mb-2 font-semibold text-gray-700 dark:text-gray-300">
-              Password
-            </label>
+          <div>
+            <label className="block mb-1 font-semibold text-gray-800 dark:text-gray-200">Password</label>
             <input
-              className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Type Password"
-              required
+              placeholder="Enter your password"
+              className="w-full p-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-zinc-800 text-black dark:text-white rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
 
+          {/* Submit */}
           <button
             type="submit"
-            className="w-full bg-blue-600 text-white hover:bg-blue-800 dark:hover:bg-blue-700 transition duration-300 rounded-xl font-semibold p-3"
+            className="w-full bg-blue-600 hover:bg-blue-900 text-white font-semibold p-3 rounded-xl transition"
           >
             Login
           </button>
 
-         <p className='cursor-pointer mt-3' onClick={()=>{
-        navigate('/signup')
-      }} >Want to create a new Account ? <span className='text-[#20c7ff] ' disabled={loading}>{loading? "Loading...":"Sign up"}</span></p>
-     
+          {/* Signup Redirect */}
+          <p className="text-center text-gray-600 dark:text-gray-300">
+            New user?{" "}
+            <Link to="/signup" className="text-blue-600 dark:text-blue-400 hover:underline">
+              Signup
+            </Link>
+          </p>
         </form>
       </div>
     </div>

@@ -11,7 +11,26 @@ const AddTodo = ({ onAdd }) => {
   const [reminder, setReminder] = useState(false);
   const [listening, setListening] = useState(false);
 
-  // 📤 Submit Handler
+  // ✅ Voice Input
+  const handleVoiceInput = () => {
+    const recognition = new window.webkitSpeechRecognition();
+    recognition.lang = "en-US";
+    recognition.interimResults = false;
+
+    recognition.onstart = () => setListening(true);
+    recognition.onresult = (event) => {
+      setText((prev) => prev + " " + event.results[0][0].transcript);
+      setListening(false);
+    };
+    recognition.onerror = () => {
+      alert("Voice input failed");
+      setListening(false);
+    };
+
+    recognition.start();
+  };
+
+  // ✅ Task Add Handler
   const handleAdd = (e) => {
     e.preventDefault();
     if (!text.trim()) return;
@@ -42,7 +61,7 @@ const AddTodo = ({ onAdd }) => {
     setReminder(false);
   };
 
-  // 🔔 Notification Scheduling
+  // ✅ Reminder Notification
   const scheduleReminder = (taskText, due) => {
     const now = new Date();
     const timeUntilDue = due.getTime() - now.getTime();
@@ -58,71 +77,59 @@ const AddTodo = ({ onAdd }) => {
     }
   };
 
-  // 🔐 Ask for notification permission once
+  // ✅ Ask for notification permission
   useEffect(() => {
     if (Notification && Notification.permission !== "granted") {
       Notification.requestPermission();
     }
   }, []);
 
-  // 🎤 Voice Input
-  const handleVoiceInput = () => {
-    const recognition = new window.webkitSpeechRecognition();
-    recognition.lang = "en-US";
-    recognition.interimResults = false;
-
-    recognition.onstart = () => setListening(true);
-    recognition.onresult = (event) => {
-      setText((prev) => prev + " " + event.results[0][0].transcript);
-      setListening(false);
-    };
-    recognition.onerror = () => {
-      alert("Voice input failed");
-      setListening(false);
-    };
-
-    recognition.start();
-  };
-
   return (
     <form
       onSubmit={handleAdd}
-      className="flex flex-col md:flex-row flex-wrap gap-3 items-center justify-center w-full max-w-3xl mx-auto px-4 mb-4"
+      className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 w-full max-w-4xl px-4 mx-auto mb-6"
     >
-      {/* 📝 Task Input */}
       <input
         type="text"
         placeholder="Add a new task"
         value={text}
         onChange={(e) => setText(e.target.value)}
-        className="w-full md:w-auto flex-1 p-2 border rounded"
+        className="p-2 border rounded w-full"
       />
 
-      {/* 🎤 Voice */}
-      <button
-        type="button"
-        onClick={handleVoiceInput}
-        className={`px-3 py-2 rounded text-white ${
-          listening ? "bg-red-500" : "bg-indigo-500"
-        } hover:opacity-90`}
-      >
-        🎤
-      </button>
-
-      {/* 📅 Date Picker */}
       <DatePicker
         selected={dueDate}
         onChange={(date) => setDueDate(date)}
         placeholderText="Due Date"
         dateFormat="dd-MM-yyyy"
-        className="w-full md:w-auto p-2 border rounded"
+        className="p-2 border rounded w-full"
       />
 
-      {/* 🏷️ Tag */}
+      <div className="flex gap-2">
+        <button
+          type="button"
+          onClick={handleVoiceInput}
+          className={`flex-1 px-3 py-2 rounded text-white text-sm font-semibold ${
+            listening ? "bg-red-500" : "bg-indigo-500"
+          } hover:opacity-90`}
+        >
+          🎤 Voice
+        </button>
+
+        <label className="flex items-center text-sm gap-2">
+          <input
+            type="checkbox"
+            checked={reminder}
+            onChange={(e) => setReminder(e.target.checked)}
+          />
+          <span>🔔 Reminder</span>
+        </label>
+      </div>
+
       <select
         value={tag}
         onChange={(e) => setTag(e.target.value)}
-        className="w-full md:w-auto p-2 border rounded"
+        className="p-2 border rounded w-full"
       >
         <option value="Personal">Personal</option>
         <option value="Work">Work</option>
@@ -130,22 +137,20 @@ const AddTodo = ({ onAdd }) => {
         <option value="Study">Study</option>
       </select>
 
-      {/* 🚦 Priority */}
       <select
         value={priority}
         onChange={(e) => setPriority(e.target.value)}
-        className="w-full md:w-auto p-2 border rounded"
+        className="p-2 border rounded w-full"
       >
         <option value="Low">🟢 Low</option>
         <option value="Medium">🟡 Medium</option>
         <option value="High">🔴 High</option>
       </select>
 
-      {/* 🔁 Recurrence */}
       <select
         value={recurrence}
         onChange={(e) => setRecurrence(e.target.value)}
-        className="w-full md:w-auto p-2 border rounded"
+        className="p-2 border rounded w-full"
       >
         <option value="None">No Repeat</option>
         <option value="Daily">Daily</option>
@@ -153,22 +158,11 @@ const AddTodo = ({ onAdd }) => {
         <option value="Monthly">Monthly</option>
       </select>
 
-      {/* 🔔 Reminder */}
-      <label className="flex items-center gap-1 text-sm">
-        <input
-          type="checkbox"
-          checked={reminder}
-          onChange={(e) => setReminder(e.target.checked)}
-        />
-        Reminder
-      </label>
-
-      {/* ➕ Submit */}
       <button
         type="submit"
-        className="w-full md:w-auto bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-800"
+        className="w-full bg-blue-600 text-white font-semibold py-2 rounded hover:bg-blue-800 col-span-1 sm:col-span-2 md:col-span-3"
       >
-        Add Task
+        ➕ Add Task
       </button>
     </form>
   );

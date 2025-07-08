@@ -100,9 +100,9 @@ const AddTodo = ({ onAdd }) => {
       <DatePicker
         selected={dueDate}
         onChange={(date) => setDueDate(date)}
-        placeholderText="Due Date"
+        placeholderText="📅 Due Date"
         dateFormat="dd-MM-yyyy"
-        className="p-2 border rounded w-full"
+        className="w-full sm:w-auto p-2 border border-gray-300 rounded text-sm text-black dark:text-white dark:bg-zinc-800"
       />
 
       <div className="flex gap-2">

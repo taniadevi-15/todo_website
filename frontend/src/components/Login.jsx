@@ -6,17 +6,20 @@ import { useNavigate, Link } from "react-router-dom";
 function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const navigateTo = useNavigate();
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
-  // ✅ Redirect to home if already logged in
+  // 🔐 Check if already logged in
   useEffect(() => {
     const token = localStorage.getItem("jwt");
     if (token) {
-      navigateTo("/");
+      setTimeout(() => navigate("/"), 300); // ensure router is ready (esp. on mobile)
+    } else {
+      setLoading(false);
     }
-  }, [navigateTo]);
+  }, [navigate]);
 
-  // ✅ Login handler
+  // 🔁 Handle Login
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
@@ -25,36 +28,36 @@ function Login() {
         { email, password },
         {
           withCredentials: true,
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: { "Content-Type": "application/json" },
         }
       );
 
       toast.success(data.message || "Login successful");
       localStorage.setItem("jwt", data.token);
 
-      // ✅ Optional: small delay before redirect
-      setTimeout(() => {
-        navigateTo("/");
-      }, 500);
-
-      setEmail("");
-      setPassword("");
-    } catch (error) {
-      console.error("Login error:", error);
+      setTimeout(() => navigate("/"), 500); // gives mobile time to mount
+    } catch (err) {
       toast.error(
-        error?.response?.data?.message || "Login failed. Please check your credentials."
+        err?.response?.data?.message || "Login failed. Please try again."
       );
     }
   };
 
+  // ⏳ Loading screen for small/mobile devices
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-zinc-950 text-white">
+        <span className="text-lg animate-pulse">Checking login...</span>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-zinc-950 transition-all">
-      <div className="w-full max-w-md p-8 bg-white dark:bg-zinc-900 text-black dark:text-white rounded-lg shadow-lg transition-all">
-        <h2 className="text-2xl font-bold mb-6 text-center">Login</h2>
-        <form onSubmit={handleLogin} className="space-y-4">
-          {/* Email Field */}
+    <div className="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-zinc-950 px-4">
+      <div className="w-full max-w-md p-6 sm:p-8 bg-white dark:bg-zinc-900 text-black dark:text-white rounded-xl shadow-lg transition-all">
+        <h2 className="text-3xl font-bold mb-6 text-center">Login</h2>
+        <form onSubmit={handleLogin} className="space-y-5">
+          {/* Email */}
           <div>
             <label className="block mb-1 font-semibold text-gray-800 dark:text-gray-200">
               Email
@@ -63,13 +66,13 @@ function Login() {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="Enter your email"
-              className="w-full p-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-zinc-800 text-black dark:text-white rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="you@example.com"
+              className="w-full p-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-zinc-800 text-black dark:text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
             />
           </div>
 
-          {/* Password Field */}
+          {/* Password */}
           <div>
             <label className="block mb-1 font-semibold text-gray-800 dark:text-gray-200">
               Password
@@ -78,25 +81,25 @@ function Login() {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Enter your password"
-              className="w-full p-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-zinc-800 text-black dark:text-white rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="••••••••"
+              className="w-full p-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-zinc-800 text-black dark:text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
             />
           </div>
 
-          {/* Submit Button */}
+          {/* Login Button */}
           <button
             type="submit"
-            className="w-full bg-blue-600 hover:bg-blue-900 text-white font-semibold p-3 rounded-xl transition"
+            className="w-full bg-blue-600 hover:bg-blue-800 text-white font-semibold py-3 rounded-xl transition"
           >
             Login
           </button>
 
-          {/* Signup Redirect */}
-          <p className="text-center text-gray-600 dark:text-gray-300">
-            New user?{" "}
-            <Link to="/signup" className="text-blue-600 dark:text-blue-400 hover:underline">
-              Signup
+          {/* Signup Link */}
+          <p className="text-center text-gray-600 dark:text-gray-400 text-sm">
+            New here?{" "}
+            <Link to="/signup" className="text-blue-600 dark:text-blue-400 underline">
+              Create an account
             </Link>
           </p>
         </form>

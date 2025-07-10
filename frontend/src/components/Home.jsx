@@ -3,6 +3,44 @@ import axios from "axios";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 
+// Helper functions
+const isSameDay = (a, b) => a.toDateString() === b.toDateString();
+const isSameWeek = (a, b) => {
+  const getWeek = (d) => {
+    const start = new Date(d.getFullYear(), 0, 1);
+    const diff = (d - start) / (1000 * 60 * 60 * 24);
+    return Math.ceil((diff + start.getDay() + 1) / 7);
+  };
+  return getWeek(a) === getWeek(b) && a.getFullYear() === b.getFullYear();
+};
+const isSameMonth = (a, b) => a.getMonth() === b.getMonth() && a.getFullYear() === b.getFullYear();
+
+const resetRecurringTasks = (tasks) => {
+  const today = new Date();
+  return tasks.map((task) => {
+    if (!task.completed || !task.completedDate) return task;
+
+    const completed = new Date(task.completedDate);
+    let shouldReset = false;
+
+    switch (task.recurrence) {
+      case "Daily":
+        shouldReset = !isSameDay(today, completed);
+        break;
+      case "Weekly":
+        shouldReset = !isSameWeek(today, completed);
+        break;
+      case "Monthly":
+        shouldReset = !isSameMonth(today, completed);
+        break;
+    }
+
+    return shouldReset
+      ? { ...task, completed: false, completedDate: null }
+      : task;
+  });
+};
+
 function Home() {
   const [todos, setTodos] = useState([]);
   const [newTodo, setNewTodo] = useState("");
@@ -23,7 +61,8 @@ function Home() {
         const res = await axios.get("https://todo-websitee.onrender.com/todo/fetch", {
           withCredentials: true,
         });
-        setTodos(res.data.todos);
+        const updatedTodos = resetRecurringTasks(res.data.todos);
+        setTodos(updatedTodos);
       } catch {
         setError("Failed to fetch tasks.");
       } finally {
@@ -68,6 +107,7 @@ function Home() {
           recurrence,
           reminder,
           completed: false,
+          completedDate: null,
         },
         { withCredentials: true }
       );
@@ -75,7 +115,7 @@ function Home() {
       setTodos([...todos, res.data.newTodo]);
       if (reminder && dueDate) scheduleReminder(newTodo, dueDate);
 
-      // Reset
+      // Reset form
       setNewTodo("");
       setDueDate("");
       setTag("Personal");
@@ -92,12 +132,16 @@ function Home() {
     try {
       const res = await axios.put(
         `https://todo-websitee.onrender.com/todo/update/${id}`,
-        { ...todo, completed: !todo.completed },
+        {
+          ...todo,
+          completed: !todo.completed,
+          completedDate: !todo.completed ? new Date().toISOString() : null,
+        },
         { withCredentials: true }
       );
       setTodos(todos.map((t) => (t._id === id ? res.data.todo : t)));
     } catch {
-      setError("Failed to update status.");
+      setError("Failed to update task.");
     }
   };
 
@@ -126,7 +170,6 @@ function Home() {
   };
 
   const remaining = todos.filter((t) => !t.completed).length;
-
   const priorityOrder = { high: 1, medium: 2, low: 3 };
   const sortedTodos = [...todos].sort((a, b) => {
     const aP = a.priority?.toLowerCase() || "low";

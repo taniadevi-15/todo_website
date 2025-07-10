@@ -1,3 +1,4 @@
+// AddTodo.jsx
 import React, { useState, useEffect } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -11,7 +12,6 @@ const AddTodo = ({ onAdd }) => {
   const [reminder, setReminder] = useState(false);
   const [listening, setListening] = useState(false);
 
-  // ✅ Voice Input
   const handleVoiceInput = () => {
     const recognition = new window.webkitSpeechRecognition();
     recognition.lang = "en-US";
@@ -30,7 +30,6 @@ const AddTodo = ({ onAdd }) => {
     recognition.start();
   };
 
-  // ✅ Task Add Handler
   const handleAdd = (e) => {
     e.preventDefault();
     if (!text.trim()) return;
@@ -44,6 +43,7 @@ const AddTodo = ({ onAdd }) => {
       recurrence,
       reminder,
       completed: false,
+      completedDate: null,
     };
 
     onAdd(newTask);
@@ -61,7 +61,6 @@ const AddTodo = ({ onAdd }) => {
     setReminder(false);
   };
 
-  // ✅ Reminder Notification
   const scheduleReminder = (taskText, due) => {
     const now = new Date();
     const timeUntilDue = due.getTime() - now.getTime();
@@ -77,7 +76,6 @@ const AddTodo = ({ onAdd }) => {
     }
   };
 
-  // ✅ Ask for notification permission
   useEffect(() => {
     if (Notification && Notification.permission !== "granted") {
       Notification.requestPermission();
